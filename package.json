@@ -1,0 +1,17 @@
+{
+  "name": "barcelos_reddit_bot",
+  "version": "0.0.1",
+  "description": "A bot to interact with barcelos sub reddit",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tiago Mendes",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.4.5",
+    "puppeteer": "^18.2.1",
+    "snoowrap": "^1.23.0"
+  }
+}
