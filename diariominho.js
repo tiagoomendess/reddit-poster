@@ -34,7 +34,7 @@ class DiarioDoMinho {
         let $ = cheerio.load(await this.page.evaluate(body => body.innerHTML, bodyHandle))
 
         let articles = []
-        let list = $('article')
+        let list = $('#main > div > div  > section > div > div > div > article')
 
         list.each((index, element) => {
             const link = $(element).find('a.card-link')

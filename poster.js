@@ -30,8 +30,7 @@ class Poster {
         this.posted = fs.readFileSync(POSTED_URLS_FILE_NAME)
             .toString()
             .split("\r\n")
-            .filter(line => line.trim() !== "")
-            .slice(-MAX_URLS_TO_COMPARE);
+            .filter(line => line.trim() !== "");
 
         this.postedTitles = fs.readFileSync(POSTED_TITLES_FILE_NAME)
             .toString()
@@ -200,6 +199,8 @@ class Poster {
             day = article.day
         }
 
+        const linkTitle = helpers.cleanTitle(article.title)
+
         // try finding post by title in aggregatedPosted
         let post = this.aggregatedPosted[article.aggregateUnderTitle]
         let markdown = ''
@@ -217,7 +218,7 @@ class Poster {
         if (post) {
             console.log(`[+] Aggregator post found, editing`)
             const currentSelftext = await post.selftext;
-            markdown = `${currentSelftext}\n- Dia ${day} > [${article.title}](${article.url})`
+            markdown = `${currentSelftext}\n- Dia ${day} > [${linkTitle}](${article.url})`
 
             // update local post with new markdown
             this.aggregatedPosted[article.aggregateUnderTitle].selftext = markdown
@@ -227,7 +228,7 @@ class Poster {
             console.log(`[!] Aggregator post not found, creating a new one`)
 
             // markdown of the article title with a link
-            markdown = `- Dia ${day} > [${article.title}](${article.url})`
+            markdown = `- Dia ${day} > [${linkTitle}](${article.url})`
             let newPost = await this.redditApi.createTextPost('barcelos', article.aggregateUnderTitle, markdown)
 
             if (!newPost) {
