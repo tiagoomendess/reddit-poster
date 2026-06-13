@@ -1,7 +1,7 @@
 'use strict'
 
 const puppeteer = require('puppeteer')
-const URL = `https://www.diariodominho.pt/noticias/regiao`
+const URL = `https://www.diariodominho.pt/noticias/barcelos`
 const cheerio = require('cheerio')
 
 class DiarioDoMinho {
@@ -37,13 +37,10 @@ class DiarioDoMinho {
         let list = $('article')
 
         list.each((index, element) => {
-
-            let title = $(element).find('.card-link').html()
-            let url = $(element).find('.card-link').attr('href')
+            const link = $(element).find('a.card-link')
+            let title = (link.attr('aria-label') || link.text() || '').replace(/^Link to /, '').trim()
+            let url = link.attr('href')
             if (!title || !url || url == "#") return;
-
-            if (!title.toLocaleLowerCase().includes('barcelos'))
-                return;
 
             articles.push({
                 title: title.replace("\"", "").trim(),

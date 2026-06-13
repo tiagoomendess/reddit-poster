@@ -2,7 +2,10 @@
 
 require('dotenv').config();
 
-const FILE_NAME = `posted.txt`
+const POSTED_URLS_FILE = 'posted.txt'
+const POSTED_TITLES_FILE = 'posted_titles.txt'
+const SIMILARITY_THRESHOLD = 0.33
+const MAX_TITLES_TO_COMPARE = 50
 const helpers = require('./helpers')
 const OMinho = require('./ominho')
 const fs = require('fs');
@@ -16,8 +19,29 @@ const RedditApi = require('./reddit_api')
 const GilVicente = require('./gilvicente')
 
 console.log(`Starting BOT`)
-let posted = fs.readFileSync(FILE_NAME).toString().split("\r\n");
+
+if (!fs.existsSync(POSTED_TITLES_FILE)) {
+    fs.writeFileSync(POSTED_TITLES_FILE, '')
+}
+
+let posted = fs.readFileSync(POSTED_URLS_FILE).toString().split("\r\n").filter(line => line.trim() !== '')
+let postedTitles = fs.readFileSync(POSTED_TITLES_FILE).toString().split("\r\n").filter(line => line.trim() !== '').slice(-MAX_TITLES_TO_COMPARE)
 console.log(`Loaded ${posted.length} links that were already posted`)
+console.log(`Loaded ${postedTitles.length} recent titles for similarity check (last ${MAX_TITLES_TO_COMPARE})`)
+
+const similarAlreadyPosted = (title) => {
+    const cleanedTitle = helpers.cleanTitle(title)
+
+    for (let i = 0; i < postedTitles.length; i++) {
+        const similarity = helpers.jaccardSimilarity(cleanedTitle, postedTitles[i])
+        if (similarity >= SIMILARITY_THRESHOLD) {
+            console.log(`Ignoring "${cleanedTitle}" because it is similar (${similarity.toFixed(2)}) to a posted article: "${postedTitles[i]}"`)
+            return true
+        }
+    }
+
+    return false
+}
 
 const postArticles = async (articles) => {
     let redditApi = new RedditApi(
@@ -37,14 +61,26 @@ const postArticles = async (articles) => {
             continue
         }
 
-        console.log(`Posting «${articles[i].title}» | ${articles[i].url}`)
+        const title = helpers.cleanTitle(articles[i].title)
+
+        if (similarAlreadyPosted(title)) {
+            ignored++
+            continue
+        }
+
+        console.log(`Posting «${title}» | ${articles[i].url}`)
 
         await helpers.wait(1000) // Wait 1 second before posting, no spamming
-        let success = await redditApi.submitLink('barcelos', articles[i].title, articles[i].url)
+        let success = await redditApi.submitLink('barcelos', title, articles[i].url)
         if (success) {
             successes++
             posted.push(articles[i].url)
-            fs.appendFileSync(FILE_NAME, `\r\n${articles[i].url}`)
+            postedTitles.push(title)
+            if (postedTitles.length > MAX_TITLES_TO_COMPARE) {
+                postedTitles.shift()
+            }
+            fs.appendFileSync(POSTED_URLS_FILE, `\r\n${articles[i].url}`)
+            fs.appendFileSync(POSTED_TITLES_FILE, `\r\n${title}`)
         } else {
             failed++
             console.log(`Could not post article...`)

@@ -59,10 +59,7 @@ class Reddit {
 
     async post(subreddit, data = { type: "null", title: "null", content: "null"}) {
 
-        var title = data.title.slice(0, 299)
-        title = title.replace("&nbsp;", "")
-        title = title.replace("&amp;", "&")
-        title = title.replace("&quot;", "\"")
+        var title = helpers.cleanTitle(data.title).slice(0, 299)
 
         switch(data.type) {
             case 'text':

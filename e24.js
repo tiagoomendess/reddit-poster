@@ -1,7 +1,7 @@
 'use strict'
 
 const puppeteer = require('puppeteer')
-const URL = `https://e24.sapo.pt/cavado/barcelos/`
+const URL = `https://e24.pt/cavado/barcelos/`
 const cheerio = require('cheerio')
 
 class E24 {
@@ -35,10 +35,10 @@ class E24 {
         let $ = cheerio.load(await this.page.evaluate(body => body.innerHTML, bodyHandle))
 
         let articles = []
-        let list = $('.p-highlight > .overlay-holder > .p-featured > a')
+        let list = $('h3.entry-title a.p-url')
 
         list.each((index, element) => {
-            let title = $(element).attr('title').replace("Barcelos: ", "").trim()
+            let title = $(element).text().replace(/^Barcelos:\s*/i, "").trim()
             let url = $(element).attr('href')
             if (!title || !url || url == "#") return;
 
